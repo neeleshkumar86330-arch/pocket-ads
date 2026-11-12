@@ -25,7 +25,7 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    const AdController = window.Adsgram ? window.Adsgram.init({ blockId: "59338" }) : null;
+    const AdController = window.Adsgram ? window.Adsgram.init({ blockId: "59411" }) : null;
 
     function startAd() {
       const btn = document.getElementById("adBtn");
@@ -45,7 +45,7 @@
         btn.disabled = false;
         
         if (tg && tg.sendData) {
-          tg.sendData(JSON.stringify({ status: "completed", blockId: "59338" }));
+          tg.sendData(JSON.stringify({ status: "completed", blockId: "59411" }));
         }
       }).catch((error) => {
         status.style.color = "#ff5252";
