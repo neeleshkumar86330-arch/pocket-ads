@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watch Ad & Earn Coins</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #121212; color: white; text-align: center; padding: 30px 15px; }
+    .card { background: #1e1e1e; padding: 25px; border-radius: 15px; max-width: 400px; margin: auto; }
+    button { background: #00c853; color: white; border: none; padding: 15px 25px; font-size: 18px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; }
+    button:disabled { background: #555; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🎬 Watch Video Ad</h2>
+    <p>15 second ka video ad dekhein aur turant <b>+3 Coins</b> payein!</p>
+    <button id="adBtn" onclick="startAd()">▶️ Play Ad (+3 Coins)</button>
+    <p id="status" style="margin-top:15px; color:#aaa;"></p>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const AdController = window.Adsgram ? window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" }) : null;
+
+    function startAd() {
+      const btn = document.getElementById("adBtn");
+      const status = document.getElementById("status");
+      btn.disabled = true;
+      status.innerText = "Ad load ho raha hai...";
+
+      if (AdController && "YOUR_ADSGRAM_BLOCK_ID" !== "YOUR_ADSGRAM_BLOCK_ID") {
+        AdController.show().then(() => {
+          tg.sendData("video_ad_completed");
+          tg.close();
+        }).catch(() => {
+          status.innerText = "Ad load nahi hua, dobara try karein.";
+          btn.disabled = false;
+        });
+      } else {
+        let sec = 15;
+        const timer = setInterval(() => {
+          status.innerText = `Ad chal raha hai... ${sec}s bache hain`;
+          sec--;
+          if (sec < 0) {
+            clearInterval(timer);
+            tg.sendData("video_ad_completed");
+            tg.close();
+          }
+        }, 1000);
+      }
+    }
+  </script>
+</body>
+</html>
