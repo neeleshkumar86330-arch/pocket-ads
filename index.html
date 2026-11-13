@@ -1,56 +1,140 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Watch Ad & Earn Coins</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brain Trivia & Spin</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
   <style>
-    body { font-family: sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .card { background: #1e1e1e; padding: 25px; border-radius: 16px; max-width: 360px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-    button { background: #00c853; color: white; border: none; padding: 14px 24px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 15px; }
-    button:disabled { background: #555; cursor: not-allowed; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #120c2c, #241754);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(130, 180, 255, 0.3);
+      border-radius: 20px;
+      padding: 22px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    .badge {
+      display: inline-block;
+      background: #00d2ff;
+      color: #0b081d;
+      font-weight: bold;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    h2 { margin: 6px 0 14px; font-size: 22px; color: #ffd659; }
+    .question { font-size: 16px; margin-bottom: 16px; line-height: 1.4; }
+    .opt-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .opt-btn:hover { background: rgba(110, 160, 255, 0.3); }
+    .ad-btn {
+      display: none;
+      width: 100%;
+      padding: 14px;
+      margin-top: 14px;
+      background: linear-gradient(90deg, #00e676, #00b0ff);
+      border: none;
+      border-radius: 12px;
+      color: #08121e;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #status { margin-top: 12px; font-size: 14px; color: #a5f3fc; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>🎬 Watch Video Ad</h2>
-    <p>15 second ka video ad dekhein aur turant coins paayein!</p>
-    <button id="adBtn" onclick="startAd()">▶️ Watch Ad Now</button>
-    <p id="status" style="margin-top:15px; font-size:14px; color:#aaa;"></p>
+    <div class="badge">DAILY TRIVIA CHALLENGE</div>
+    <h2>Brain Trivia & Spin</h2>
+    <div id="quiz-box">
+      <div class="question" id="q-text">Loading question...</div>
+      <div id="options"></div>
+    </div>
+    <button class="ad-btn" id="reward-btn" onclick="watchRewardAd()">🎬 Claim +7 Bonus Points (Watch Ad)</button>
+    <div id="status">Answer 1 quick trivia question to unlock your bonus spin!</div>
   </div>
 
   <script>
     const tg = window.Telegram.WebApp;
+    tg.ready();
     tg.expand();
 
-    const AdController = window.Adsgram ? window.Adsgram.init({ blockId: "59411" }) : null;
+    // APNA NAYA ADSGRAM BLOCK ID YAHAN DALEN
+    const BLOCK_ID = "59411";
+    const RENDER_URL = "https://pocket-bot-of0g.onrender.com/ad_reward";
 
-    function startAd() {
-      const btn = document.getElementById("adBtn");
-      const status = document.getElementById("status");
+    const questions = [
+      { q: "Which planet is known as the Red Planet?", opts: ["Earth", "Mars", "Jupiter"], ans: 1 },
+      { q: "How many continents are there on Earth?", opts: ["5", "6", "7"], ans: 2 },
+      { q: "Which is the largest ocean in the world?", opts: ["Pacific Ocean", "Indian Ocean", "Atlantic Ocean"], ans: 0 },
+      { q: "What is the capital of India?", opts: ["Mumbai", "New Delhi", "Kolkata"], ans: 1 }
+    ];
 
-      if (!AdController) {
-        status.innerText = "Ad SDK load nahi hua, page refresh karein.";
-        return;
-      }
+    const currentQ = questions[Math.floor(Math.random() * questions.length)];
+    document.getElementById("q-text").innerText = currentQ.q;
+    const optDiv = document.getElementById("options");
 
-      btn.disabled = true;
-      status.innerText = "Ad load ho raha hai...";
-
-      AdController.show().then((result) => {
-        status.style.color = "#00c853";
-        status.innerText = "✅ Ad poora hua! Coins add ho rahe hain...";
-        btn.disabled = false;
-        
-        if (tg && tg.sendData) {
-          tg.sendData(JSON.stringify({ status: "completed", blockId: "59411" }));
+    currentQ.opts.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "opt-btn";
+      btn.innerText = opt;
+      btn.onclick = () => {
+        if (idx === currentQ.ans) {
+          document.getElementById("status").innerText = "✅ Correct Answer! Click below to claim your +7 bonus points.";
+          document.getElementById("reward-btn").style.display = "block";
+        } else {
+          document.getElementById("status").innerText = "❌ Wrong answer! Try another option.";
         }
-      }).catch((error) => {
-        status.style.color = "#ff5252";
-        status.innerText = "❌ Ad abhi uplabdh nahi hai ya skip kiya gaya.";
-        btn.disabled = false;
+      };
+      optDiv.appendChild(btn);
+    });
+
+    function watchRewardAd() {
+      const userId = tg.initDataUnsafe?.user?.id || "";
+      const statusEl = document.getElementById("status");
+      statusEl.innerText = "⏳ Loading video ad...";
+
+      const AdController = window.Adsgram.init({ blockId: BLOCK_ID });
+      AdController.show().then(() => {
+        statusEl.innerText = "🎉 Ad Completed! Adding +7 points...";
+        fetch(`${RENDER_URL}?userid=${userId}`)
+          .then(() => {
+            statusEl.innerText = "✅ +7 Points Added! You can close this window.";
+            setTimeout(() => tg.close(), 1500);
+          })
+          .catch(() => {
+            statusEl.innerText = "⚠️ Network error while saving points.";
+          });
+      }).catch((err) => {
+        statusEl.innerText = "❌ Ad not available right now or skipped.";
       });
     }
   </script>
